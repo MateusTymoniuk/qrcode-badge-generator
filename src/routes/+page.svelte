@@ -1,44 +1,57 @@
 <script>
     import qrcode from "qrcode-generator";
+    import Badge from "$lib/Badge.svelte";
 
-    let name = "";
-    let email = "";
-    let twitter = "";
-    let github = "";
+    let atendeeName;
+    let email;
+    let twitter;
+    let github;
+    let showBadge;
+    let qrcodeImageURL;
+
+    clearPageState();
 
     function cancel() {
-        name = "";
-        email = "";
-        twitter = "";
-        github = "";
+        clearPageState();
+        document.getElementById("placeholder").innerHTML = "";
+        document.getElementById("atendeeName").focus();
     }
 
     function generateBadge() {
-        let qr = qrcode(4, 'L');
-        qr.addData("Hi");
+        // validate input
+        // escape name to a valid url format
+        const encodedName = encodeURIComponent(atendeeName);
+        showBadge = true;
+        let qr = qrcode(0, 'L');
+        let urlData = "http://localhost:5173/badge?name=" + encodedName;
+        qr.addData(urlData);
         qr.make();
-        document.getElementById("placeholder").innerHTML = qr.createImgTag();
+        qrcodeImageURL = qr.createDataURL();
+    }
+
+    function clearPageState() {
+        atendeeName = "";
+        email = "";
+        twitter = "";
+        github = "";
+        showBadge = false;
+        qrcodeImageURL = undefined;
     }
 </script>
 <h1>Badge QRcode generator</h1>
 <form>
-    <label for="name">Name: </label>
-    <input bind:value={name} name="name" type="text" required />
+    <label for="atendeeName">Atendee name: </label>
+    <input bind:value={atendeeName} id="atendeeName" name="atendeeName" type="text" required />
     <label for="email">Email: </label>
-    <input bind:value={email} name="email" type="text" required />
+    <input bind:value={email} id="email" name="email" type="email" required size="64" maxlength="64" />
     <label for="twitter">Twitter: </label>
-    <input bind:value={twitter} name="twitter" type="text" />
+    <input bind:value={twitter} id="twitter" name="twitter" type="text" />
     <label for="github">Github: </label>
-    <input bind:value={github} name="github" type="text" />
+    <input bind:value={github} id="github" name="github" type="text" />
     <button on:click="{cancel}">Cancel</button>
     <button on:click="{generateBadge}">Create</button>
 </form>
-<h2>
-    debug
-</h2>
-<p>{name}</p>
-<p>{email}</p>
-<p>{twitter}</p>
-<p>{github}</p>
-<div id="placeholder"></div>
 
+{#if showBadge }
+    <Badge name={atendeeName} qrcode={qrcodeImageURL} />
+{/if}
